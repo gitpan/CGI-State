@@ -7,7 +7,7 @@ use CGI ();
 
 use vars qw($VERSION);
 
-$VERSION = (qw$Revision: 0.01 $)[-1];
+$VERSION = (qw$Revision: 0.02 $)[-1];
 
 #Returns a state hashref
 sub state {
@@ -39,7 +39,7 @@ sub state {
       my $over_write = 0;
 
       my $next = (not defined $words[$w + 1])
-        ? ($over_write = 1) && $cgi->param($param)  #use short circuiting to set $next, overwrite the former value, if there is one
+        ? ($over_write++, $cgi->param($param))
         : $words[$w + 1] =~ /\D/
           ? {}
           : [];
@@ -192,11 +192,14 @@ multi-dimensional data structure automatically for me.
 
 =over 4
 
-=item *
+=item $state = CGI::State-E<gt>state( $cgi )
 
-CGI::State-E<gt>state( \%hash )
+This routine takes one argument, a CGI.pm object reference.
 
-This allows you to logically group together form
+It will return a hashref containing as many levels as
+specified in the input parameters.
+
+It allows you to logically group together form
 elements, so that when the CGI script receives them, it
 has to do no logic of it's own to group things together.
 
@@ -236,11 +239,11 @@ programmers to pick up.  In the future I may change this module
 to allow you to specify different delimeters, to allow more
 perl-like syntax.
 
-=item *
+=item $cgi = CGI::State-E<gt>cgi( $state )
 
-CGI::State-E<gt>cgi( $state )
+This routine takes one argument, a multi-dimensional hash.
 
-This will return a I<flattened> CGI object based on the values
+It will return a I<flattened> CGI object based on the values
 referenced by $state.  Very useful for maintaining state
 across various CGI invocations.
 
@@ -315,12 +318,16 @@ Add more security measures and error checking.
 
 =back
 
-=head1 AUTHOR
-
-Dan Kubb, dkubb@cpan.org
-
 =head1 SEE ALSO
 
-CGI
+L<CGI>
+
+=head1 AUTHOR
+
+Copyright 2001, Dan Kubb <dan@mealtips.com>
+
+This module is distributed under the same terms as Perl itself.  Feel
+free to use, modify and redistribute it as long as you retain the
+correct attribution.
 
 =cut

@@ -1,20 +1,48 @@
-# Before `make install' is performed this script should be runnable with
-# `make test'. After `make install' it should work as `perl test.pl'
+#!/usr/bin/perl -w
 
-######################### We start with some black magic to print on failure.
+#Need to execute things in this begin block
+#in order to ensure that debug information is
+#printed after modules are loaded.
+BEGIN {
 
-# Change 1..1 below to 1..last_test_to_print .
-# (It may become useful if the test is moved to ./t subdirectory.)
+  $|++;
 
-BEGIN { $| = 1; print "1..1\n"; }
-END {print "not ok 1\n" unless $loaded;}
-use CGI::State;
-$loaded = 1;
-print "ok 1\n";
+  use Test;
+  plan(tests => 4);
+  print "\nBegin Testing...\n\n";
+  print "\n\t- Test.pm loaded successfully (used to simplify testing)\n\n" if ok(1);
 
-######################### End of black magic.
+  use strict;
+  use Carp qw(verbose);
+  $SIG{__WARN__} = \&Carp::confess; #Super strict
 
-# Insert your test code below (better if it prints "ok 13"
-# (correspondingly "not ok 13") depending on the success of chunk 13
-# of the test code):
+  use CGI qw(-no_debug);
+  print "\n\t- CGI.pm loaded successfully\n\n" if ok(1);
 
+  use CGI::State;
+  print "\n\t- CGI::State loaded successfully\n\n" if ok(1);
+}
+
+#Define a test CGI object, and simulate incoming data
+my $cgi = CGI->new('products[0].products_id=1010&products[0].quantity=2&products[1].products_id=1020&products[1].quantity=3&products[2].products_id=1030&products[2].quantity=4&ontact.firstname=Dan&contact.lastname=Kubb&contact.company=my+company&contact.city=Vancouver&contact.state=BC&contact.country=Canada');
+
+print "\n\t- Translation between CGI::State and CGI.pm tested\n\n" if ok(sub { translate($cgi) }, 0);
+
+#Subroutines
+
+=head2 translate($cgi)
+
+This routine receives a CGI.pm object.  It will
+return a 1 or a 0 depending on if CGI::State
+does the translation between CGI.pm and itself.
+
+=cut
+
+sub translate {
+  my $old_cgi = shift;
+
+  my $state   = CGI::State->state($old_cgi);
+  my $new_cgi = CGI::State->cgi($state);
+
+  return scalar grep { $old_cgi->param($_) ne $new_cgi->param($_) } $old_cgi->param;
+}
